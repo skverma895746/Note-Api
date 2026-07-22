@@ -2,6 +2,10 @@
 const titleInput = document.querySelector("#title");
 const descriptionInput = document.querySelector("#description");
 const errorMsg = document.querySelector(".errorMsg");
+const submitButton = document.querySelector("#submitButton");
+const cancelButton = document.querySelector("#cancelButton");
+let editingId = null;
+let notesById = {};
 async function AddData() {
     const title = titleInput.value.trim();
     const description = descriptionInput.value.trim();
@@ -11,8 +15,9 @@ async function AddData() {
         return;
     }
     try {
-        const res = await fetch("http://localhost:7000/api", {
-            method: "POST",
+        const url = editingId ? `http://localhost:7000/api/${editingId}` : "http://localhost:7000/api";
+        const res = await fetch(url, {
+            method: editingId ? "PATCH" : "POST",
             headers: {
                 "Content-Type": "application/json"
             },
@@ -22,9 +27,8 @@ async function AddData() {
             })
         });
         if (res.ok) {
-            errorMsg.textContent = "Data added successfully";
-            titleInput.value = "";
-            descriptionInput.value = ""
+            errorMsg.textContent = editingId ? "Note updated successfully" : "Note added successfully";
+            resetForm();
         }
         else {
             errorMsg.textContent = "Server error"
@@ -37,18 +41,26 @@ async function AddData() {
     ShowData();
 }
 // error message handling 
-function errorMessage() {
-    ;
+function errorMessage() {  
     setTimeout(() => {
         errorMsg.textContent = "";
     }, 2000)
 };
+function resetForm() {
+    editingId = null;
+    titleInput.value = "";
+    descriptionInput.value = "";
+    submitButton.innerHTML = 'Add note <span aria-hidden="true">+</span>';
+    cancelButton.hidden = true;
+}
+function CancelEdit() {
+    resetForm();
+}
 // get method handling 
 async function ShowData() {
     try {
         const res = await fetch("http://localhost:7000/api");
         if (res.ok) {
-            errorMsg.textContent = "Refreshed";
             errorMessage();
         }
         else {
@@ -58,7 +70,9 @@ async function ShowData() {
         let html = "";
         const data = await res.json();
         const dataList = document.querySelector(".dataList");
+        notesById = {};
         data.data.forEach((element) => {
+            notesById[element._id] = element;
             html += `
             <div class="dataCon">
                 <div class="dataElements">
@@ -71,17 +85,13 @@ async function ShowData() {
                 </div>
             </div>`;
         });
-
         dataList.innerHTML = html;
     }
     catch (error) {
         errorMsg.textContent = `${error}`;
     }
 }
-// // defalult show data 
-window.addEventListener("DOMContentLoaded", () => {
-    ShowData();
-})
+
 // delete method handling
 async function DeleteData(id) {
     try {
@@ -89,7 +99,10 @@ async function DeleteData(id) {
             method: "DELETE"
         });
         if (res.ok) {
-            errorMsg.textContent = "Data deleted succussfully";
+            if (editingId === id) {
+                resetForm();
+            }
+            errorMsg.textContent = "Note deleted successfully";
             errorMessage();
             ShowData();
         }
@@ -106,39 +119,14 @@ async function DeleteData(id) {
 }
 // Update method handling 
 async function UpdateData(id) {
-    const title = prompt("Enter new title..");
-    const description = prompt("Enter new description..")
-    if (!title || !description) {
-        errorMsg.textContent = "Fields cannot be empty";
-        return;
-    }
-    try {
-        const res = await fetch(`http://localhost:7000/api/${id}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                title: title,
-                description: description
-            })
-        });
-        if (res.ok) {
-            errorMsg.textContent = "Data Updated succussfully";
-            errorMessage();
-            setTimeout(() => {
-                ShowData();
-            },1000);
-        }
-        else {
-            errorMsg.textContent = "Server error";
-            errorMessage();
-        }
-    }
-    catch (error) {
-        errorMsg.textContent = `${error}`;
-        errorMessage();
-    }
+    const note = notesById[id];
+    if (!note) return;
+    editingId = id;
+    titleInput.value = note.title;
+    descriptionInput.value = note.description;
+    submitButton.innerHTML = 'Update note <span aria-hidden="true">&#10003;</span>';
+    cancelButton.hidden = false;
+    titleInput.focus();
 }
 
 
