@@ -6,6 +6,7 @@ const submitButton = document.querySelector("#submitButton");
 const cancelButton = document.querySelector("#cancelButton");
 let editingId = null;
 let notesById = {};
+const BACKEND_URL = "https://onrender.com";
 async function AddData() {
     const title = titleInput.value.trim();
     const description = descriptionInput.value.trim();
@@ -15,7 +16,7 @@ async function AddData() {
         return;
     }
     try {
-        const url = editingId ? `http://localhost:7000/api/${editingId}` : "http://localhost:7000/api";
+        const url = editingId ? `${BACKEND_URL}/api/${editingId}` : `${BACKEND_URL}/api`;
         const res = await fetch(url, {
             method: editingId ? "PATCH" : "POST",
             headers: {
@@ -59,7 +60,7 @@ function CancelEdit() {
 // get method handling 
 async function ShowData() {
     try {
-        const res = await fetch("http://localhost:7000/api");
+        const res = await fetch(`${BACKEND_URL}/api`);
         if (res.ok) {
             errorMessage();
         }
@@ -95,7 +96,7 @@ async function ShowData() {
 // delete method handling
 async function DeleteData(id) {
     try {
-        const res = await fetch(`http://localhost:7000/api/${id}`, {
+        const res = await fetch(`${BACKEND_URL}/api/${id}`, {
             method: "DELETE"
         });
         if (res.ok) {
@@ -128,7 +129,5 @@ async function UpdateData(id) {
     cancelButton.hidden = false;
     titleInput.focus();
 }
-
-
 
 
