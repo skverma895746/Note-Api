@@ -6,7 +6,7 @@ const submitButton = document.querySelector("#submitButton");
 const cancelButton = document.querySelector("#cancelButton");
 let editingId = null;
 let notesById = {};
-const BACKEND_URL = "https://onrender.com";
+const BACKEND_URL = "https://note-application-ar94.onrender.com";
 async function AddData() {
     const title = titleInput.value.trim();
     const description = descriptionInput.value.trim();
